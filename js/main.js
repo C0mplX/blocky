@@ -151,6 +151,9 @@ function render() {
 	context.fillStyle = "black";
 	context.fillText(score, 5,30);
 
+	if(heighScore  == null){
+		heighScore = 0;
+	}
 	context.fillText(heighScore, 460, 30);
 }
 
@@ -249,10 +252,12 @@ function loss(){
 	context.fillStyle = "red";
 	context.fillText('You are dead', 20,250);
 	context.font = 'bold 30px helvetica';
-	context.fillText('Score ' + score, 190, 280);
 
 	if(score > heighScore){
+		context.fillText('New high score ' + score, 130, 280);
 		localStorage.setItem("score", score);	
+	}else{
+		context.fillText('Score ' + score, 190, 280);
 	}
 	
 }
