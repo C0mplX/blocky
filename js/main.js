@@ -1,6 +1,7 @@
 var canvas = document.getElementById("ctx");
 var context = canvas.getContext("2d");
 var score = 0;
+var heighScore = localStorage.getItem("score");
 var keys = [];
 
 gameOn = true;
@@ -149,6 +150,8 @@ function render() {
 	context.font = 'bold 30px helvetica';
 	context.fillStyle = "black";
 	context.fillText(score, 5,30);
+
+	context.fillText(heighScore, 460, 30);
 }
 
 
@@ -247,4 +250,9 @@ function loss(){
 	context.fillText('You are dead', 20,250);
 	context.font = 'bold 30px helvetica';
 	context.fillText('Score ' + score, 190, 280);
+
+	if(score > heighScore){
+		localStorage.setItem("score", score);	
+	}
+	
 }
