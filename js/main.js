@@ -1,5 +1,6 @@
 var canvas = document.getElementById("ctx");
 var context = canvas.getContext("2d");
+
 var score = 0;
 var heighScore = localStorage.getItem("score");
 var keys = [];
@@ -11,12 +12,16 @@ var width = canvas.width, height = canvas.height, speed = 4;
 var enemySpeed = 3;
 var appleSpeed = 3;
 
+
+playerImage = new Image();
+playerImage.src = 'res/player-front.png';
 var player = {
 	x: 240,
 	y: 500,
 	width: 30,
 	height: 30
 };
+
 
 var enemy = {
 	x: Math.random() * (width - 20),
@@ -41,6 +46,7 @@ window.addEventListener("keydown", function(e)
 //Keyup function
 window.addEventListener("keyup", function(e)
 {
+	playerImage.src = "res/player-front.png";
 	delete keys[e.keyCode];
 }, false);
 
@@ -85,8 +91,15 @@ function update() {
 function playerMovement() {
 	//if(keys[38])player.y-=speed;
 	//if(keys[40])player.y+=speed;
-	if(keys[37])player.x-=speed;
-	if(keys[39])player.x+=speed;
+	if(keys[37]) {
+		player.x-=speed;
+		playerImage.src = "res/player-left.png";	
+	}
+		
+	if(keys[39]) {
+		player.x+=speed;
+		playerImage.src = "res/player-right.png";
+	}
 }
 
 //Outer collision
@@ -138,6 +151,7 @@ function render() {
 	//Render player
 	context.fillStyle = "blue";
 	context.fillRect(player.x, player.y, player.width, player.height);
+	context.drawImage(playerImage, player.x, player.y);
 
 	//render enemy
 	context.fillStyle = "green";
