@@ -12,6 +12,8 @@ var width = canvas.width, height = canvas.height, speed = 4;
 var enemySpeed = 3;
 var appleSpeed = 3;
 
+background = new Image();
+background.src = 'res/background.png';
 
 playerImage = new Image();
 playerImage.src = 'res/player-front.png';
@@ -105,7 +107,7 @@ function playerMovement() {
 //Outer collision
 function collisionWall(object) {
 	//Collision outher wall detection
-	if(object.x < 0) object.x = 0;
+	if(object.x < 0) object.x = 0;	
 	if(object.x >= width - object.width) object.x = width - object.width;
 	if(object.y < 0) object.y = 0;
 	if(object.y >= height-object.height) object.y = height - object.height;
@@ -148,6 +150,9 @@ function collisionEnemy() {
 function render() {
 	context.clearRect(0,0, width,height);
 
+
+	//render background
+	context.drawImage(background, 0, 0); 
 	//Render player
 	context.fillStyle = "blue";
 	context.fillRect(player.x, player.y, player.width, player.height);
