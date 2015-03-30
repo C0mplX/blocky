@@ -10,7 +10,11 @@ h1 {
 }
 
 .game-field {
-	width: 500px;
+	width: 800px;
 	margin: auto;
 	margin-top: 40px;
+}
+
+canvas {
+	border: 1px solid black;
 }

@@ -4,11 +4,11 @@ var context = canvas.getContext("2d");
 var score = 0;
 var heighScore = localStorage.getItem("score");
 var keys = [];
-
+var gravity = 6;
 gameOn = true;
 
 //Globals
-var width = canvas.width, height = canvas.height, speed = 4;
+var width = canvas.width, height = canvas.height, speed = 8;
 var enemySpeed = 3;
 var appleSpeed = 3;
 
@@ -70,9 +70,12 @@ function game() {
 /**
 * Update method
 */
+
 function update() {
 
 	
+	//Add gtavity
+	player.y += gravity;
 	//player movement
 	playerMovement();
 	//enemy movemnt
@@ -89,10 +92,42 @@ function update() {
 	console.log(speed, enemySpeed, appleSpeed);
 }
 
+/**
+* Render method
+*/
+function render() {
+	context.clearRect(0,0, width,height);
+	//render background
+	//context.drawImage(background, 0, 0); 
+	//Render player
+	context.fillStyle = "blue";
+	context.fillRect(player.x, player.y, player.width, player.height);
+	context.drawImage(playerImage, player.x, player.y);
+
+	//render enemy
+	context.fillStyle = "green";
+	context.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+
+	//render apple
+	context.fillStyle = "red";
+	context.fillRect(apple.x, apple.y, apple.width, apple.height);
+	//Render score
+	context.font = 'bold 30px helvetica';
+	context.fillStyle = "black";
+	context.fillText(score, 5,30);
+
+	if(heighScore  == null){
+		heighScore = 0;
+	}
+	context.fillText(heighScore, 460, 30);
+}
+
 //set player movement
 function playerMovement() {
-	//if(keys[38])player.y-=speed;
 	//if(keys[40])player.y+=speed;
+	if(keys[38]) {
+		player.y ==speed+gravity;
+	}
 	if(keys[37]) {
 		player.x-=speed;
 		playerImage.src = "res/player-left.png";	
@@ -143,39 +178,6 @@ function collisionEnemy() {
 		processApple();
 	}
 }
-
-/**
-* Render method
-*/
-function render() {
-	context.clearRect(0,0, width,height);
-
-
-	//render background
-	context.drawImage(background, 0, 0); 
-	//Render player
-	context.fillStyle = "blue";
-	context.fillRect(player.x, player.y, player.width, player.height);
-	context.drawImage(playerImage, player.x, player.y);
-
-	//render enemy
-	context.fillStyle = "green";
-	context.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-
-	//render apple
-	context.fillStyle = "red";
-	context.fillRect(apple.x, apple.y, apple.width, apple.height);
-	//Render score
-	context.font = 'bold 30px helvetica';
-	context.fillStyle = "black";
-	context.fillText(score, 5,30);
-
-	if(heighScore  == null){
-		heighScore = 0;
-	}
-	context.fillText(heighScore, 460, 30);
-}
-
 
 //controls movement of enemy. 
 function enemyControl(speedGainObject) {
