@@ -4,11 +4,12 @@ var context = canvas.getContext("2d");
 var score = 0;
 var heighScore = localStorage.getItem("score");
 var keys = [];
-var gravity = 6;
+var keysUp = [];
+var gravity = 12;
 gameOn = true;
 
 //Globals
-var width = canvas.width, height = canvas.height, speed = 8;
+var width = canvas.width, height = canvas.height, speed = 10, velocity = 0;
 var enemySpeed = 3;
 var appleSpeed = 3;
 
@@ -17,14 +18,19 @@ background.src = 'res/background.png';
 
 playerImage = new Image();
 playerImage.src = 'res/player-front.png';
+
 var player = {
 	x: 240,
 	y: 500,
 	width: 30,
-	height: 30
+	height: 30,
+	falling: false,
+	jumpPower: 14,
+	onGround: false,
+	startJump: 500
 };
 
-
+//Get start jump position
 var enemy = {
 	x: Math.random() * (width - 20),
 	y: Math.random() * (height - 530),
@@ -37,6 +43,13 @@ var apple = {
 	y: Math.random() * (height - 530),
 	width: 20,
 	height: 20
+}
+
+var block = {
+	x: 600,
+	y: 570,
+	width: 30,
+	height: 30,
 }
 
 //Keydown function
@@ -86,10 +99,10 @@ function update() {
 	collisionWallEnemy(enemy);
 	collisionWallAppel(apple);
 	//Collision enemy
+	collisionTerreain();
 	collisionEnemy();
 	//speedGainer
 	speedGain(score);
-	console.log(speed, enemySpeed, appleSpeed);
 }
 
 /**
@@ -111,6 +124,10 @@ function render() {
 	//render apple
 	context.fillStyle = "red";
 	context.fillRect(apple.x, apple.y, apple.width, apple.height);
+
+	//Render collision block 
+	context.fillStyle = "black";
+	context.fillRect(block.x, block.y, block.width, block.height);
 	//Render score
 	context.font = 'bold 30px helvetica';
 	context.fillStyle = "black";
@@ -125,9 +142,11 @@ function render() {
 //set player movement
 function playerMovement() {
 	//if(keys[40])player.y+=speed;
-	if(keys[38]) {
-		player.y ==speed+gravity;
+
+	if(keys[38])  {
+		jump();
 	}
+
 	if(keys[37]) {
 		player.x-=speed;
 		playerImage.src = "res/player-left.png";	
@@ -139,13 +158,53 @@ function playerMovement() {
 	}
 }
 
+function jump(){
+	if( player.falling == false || player.onGround == false ){
+
+		player.onGround = true;
+		velocity = player.jumpPower*-1.7;
+
+		// update gravity
+		if (velocity < 0) {
+			velocity ++;
+			console.log('Velocity: ' + velocity);
+			console.log('y: ' + player.y);
+			console.log('startJump: ' + player.startJump);
+		}
+		else {
+		// fall slower than you jump
+			velocity += 12;
+		}
+
+		if( player.startJump > player.y ) {
+			player.falling = true;
+			console.log('runthis');
+		}
+		
+		player.y += velocity;
+
+	}
+}
+
 //Outer collision
 function collisionWall(object) {
 	//Collision outher wall detection
-	if(object.x < 0) object.x = 0;	
-	if(object.x >= width - object.width) object.x = width - object.width;
+	if(object.x < 0) {
+		object.x = 0;
+		
+	}
+
+	if(object.x >= width - object.width) {
+		object.x = width - object.width;
+	}
+
 	if(object.y < 0) object.y = 0;
-	if(object.y >= height-object.height) object.y = height - object.height;
+	if(object.y >= height-object.height) {
+		object.y = height - object.height;
+		player.startJump = player.y-player.height*3;
+		player.falling = false;
+
+	} 
 }
 
 function collisionWallEnemy(object) {
@@ -176,6 +235,23 @@ function collisionEnemy() {
 	if(collision(player, apple)) 
 	{
 		processApple();
+	} 
+}
+
+function collisionTerreain() {
+	if( collision(player, block) ) {
+		if( player.x >= block.x - block.width) {
+			player.x = block.x - block.width;
+		}
+		else if (  player.x + player.width < block.x - block.width) {
+			player.x = block.x+block.width;
+		}
+
+		/*
+		player.y = block.y-player.height;
+		player.falling = false;
+		player.startJump = player.y-player.height*3;
+		*/
 	}
 }
 
