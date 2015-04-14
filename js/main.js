@@ -4,20 +4,20 @@ var context = canvas.getContext("2d");
 var score = 0;
 var heighScore = localStorage.getItem("score");
 var keys = [];
+var keys2 =[]; 
 var mouse  = [];
 var keysUp = [];
 var gravity = 7;
 gameOn = true;
 
 //Globals
-var width = canvas.width, height = canvas.height, speed = 10, velocity = 0;
-var wordSpeed = 4;
+var width = canvas.width, height = canvas.height, speed = 5;
 
 background = new Image();
 background.src = 'res/background.png';
 
 playerImage = new Image();
-playerImage.src = 'res/player-right.png';
+playerImage.src = 'res/player-front.png';
 
 var player = {
 	x: 200,
@@ -25,47 +25,85 @@ var player = {
 	width: 30,
 	height: 30,
 	falling: false,
-	jumpPower: 16,
-	onGround: false,
-	startJump: 500
+	jumpPower: 10,
+	onGround: true,
+	startJump: 500,
+	velocity: 0
 };
+
+var player2 = {
+	x: 470,
+	y: 500,
+	width: 30,
+	height: 30,
+	falling: false,
+	jumpPower: 10,
+	onGround: true,
+	startJump: 500,
+	velocity: 0
+}
 
 //Get start jump position
 
 var block = {
-	x: 1200,
-	y: 570,
-	width: 30,
+	x: -200,
+	y: -200,
+	width: 100,
 	height: 30,
 }
 
 var block2 = {
-	x: 900,	
-	y: 550,
-	width: 30,
-	height: 60,
+	x: -200,	
+	y: -200,
+	width: 50,
+	height: 30,
 }
 
 var block3 = {
-	x: 700,
-	y: 570,
+	x: -200,
+	y: -200,
+	width: 100,
+	height: 30,
+}
+
+var levelGoal = {
+	x: 770,
+	y: 450,
 	width: 30,
 	height: 30,
+}
+
+//create activation button
+
+var activationButton = {
+	x: 30,
+	y: 590,
+	width: 10,
+	height: 10,
 }
 
 //Keydown function
 window.addEventListener("keydown", function(e)
 {
 	keys[e.keyCode] = true;
+	keys2[e.keyCode] = true;
 }, false);
 
 //Keyup function
 window.addEventListener("keyup", function(e)
 {
-	playerImage.src = "res/player-right.png";
+	playerImage.src = "res/player-front.png";
 	player.height  = 30;
 	player.width = 30;
+
+	if(keys[38]) {
+		player.onGround = false;
+	}
+	if(keys2[87]) {
+		player2.onGround = false;
+	}
 	delete keys[e.keyCode];
+	delete keys2[e.keyCode];
 }, false);
 
 //Mobile support 
@@ -74,7 +112,7 @@ window.addEventListener("touchstart", function(e){
 },false)
 
 window.addEventListener("touchend", function(e){
-	playerImage.src = "res/player-right.png";
+	playerImage.src = "res/player-front.png";
 	delete mouse[1];
 },false)
 
@@ -95,20 +133,25 @@ function update() {
 	
 	//Add gtavity
 	player.y += gravity;
+	player2.y += gravity;
 	//player movement
 	playerMovement();
+	player2Movement();
 
 	//block control
-	blockControl(wordSpeed);
+	blockControl();
 	//Wall Collision
 	collisionWall(player);
-	resetBlock(block);
-	resetBlock(block2);
-	resetBlock(block3);
+	collisionWall(player2);
 	//Collision enemy
 	collisionBlock(player, block);
 	collisionBlock(player, block2);
 	collisionBlock(player, block3);
+
+	collisionBlock(player2, block);
+	collisionBlock(player2, block2);
+	collisionBlock(player2, block3);
+
 	//speedGainer
 	speedGain(score);
 }
@@ -125,15 +168,24 @@ function render() {
 	context.fillRect(player.x, player.y, player.width, player.height);
 	context.drawImage(playerImage, player.x, player.y);
 
-	//Render collision block 
-	context.fillStyle = "purple";
-	context.fillRect(block.x, block.y, block.width, block.height);
+	//render plater 2
+	context.fillStyle = "red";
+	context.fillRect(player2.x, player2.y, player2.width, player2.height);
+	//context.drawImage(playerImage, player2.x, player2.y);
 
-	context.fillStyle = "yellow";
-	context.fillRect(block2.x, block2.y, block2.width, block2.height);
-	context.fillStyle = "green";
-	context.fillRect(block3.x, block3.y, block3.width, block3.height);
+
+	collisionEventRender( player, activationButton );
+	collisionEventRender( player2, activationButton );
+	//Level goal 
+	context.fillStyle = "white";
+	context.fillRect(levelGoal.x, levelGoal.y, levelGoal.width, levelGoal.height);
+	//Render button 
+	context.fillStyle = "orange";
+	context.fillRect(activationButton.x, activationButton.y, activationButton.width, activationButton.height);
+
 	//Render score
+
+
 	context.font = 'bold 30px helvetica';
 	context.fillStyle = "black";
 	context.fillText(score, 5,30);
@@ -161,10 +213,10 @@ function playerMovement() {
 	}
 
 	if(keys[38] || mouse[1] )  {
-		jump();
+		jump(player);
 	}
 
-	/*
+	
 	if(keys[37]) {
 		player.x-=speed;
 		playerImage.src = "res/player-left.png";	
@@ -174,35 +226,60 @@ function playerMovement() {
 		player.x+=speed;
 		playerImage.src = "res/player-right.png";
 	}
-	*/
+	
 }
 
-function jump(){
-	if( player.falling == false || player.onGround == false ){
+//player 2 movement 
 
-		player.onGround = true;
-		velocity = player.jumpPower*-1.6;
+function player2Movement() {
+	/*
+	up = 38
+	down = 40
+	left = 37
+	right = 39
+	*/
+
+	if(keys[83]) {
+		player2.height  = 20;
+		player2.width = 35;
+		console.log('shirnkk');
+	}
+
+	if(keys[87] || mouse[1] )  {
+		jump(player2);
+	}
+
+	
+	if(keys[65]) {
+		player2.x-=speed;
+		playerImage.src = "res/player-left.png";	
+	}
+		
+	if(keys[68]) {
+		player2.x+=speed;
+		playerImage.src = "res/player-right.png";
+	}
+}
+
+function jump(obj){
+	if( obj.falling == false && obj.onGround == true ){
+
+		obj.velocity = obj.jumpPower*-1.6;
 
 		// update gravity
-		if (velocity < 0) {
-			velocity ++;
-			player.x += 5;
-			console.log('Velocity: ' + velocity);
-			console.log('y: ' + player.y);
-			console.log('startJump: ' + player.startJump);
+		if (obj.velocity < 0) {
+			obj.velocity ++;
 		}
 		else {
 		// fall slower than you jump
-			velocity += 20;
+			obj.velocity += 20;
 		}
 
-		if( player.startJump > player.y+20 ) {
-			player.falling = true;
-			console.log('runthis');
+		if( obj.startJump > obj.y+20 ) {
+			obj.falling = true;
 		}
 		
-		player.y += velocity;
-
+		obj.y += obj.velocity;
 	}
 }
 
@@ -221,57 +298,35 @@ function collisionWall(object) {
 	if(object.y < 0) object.y = 0;
 	if(object.y >= height-object.height) {
 		object.y = height - object.height;
-		player.startJump = player.y-player.height*3;
-		player.falling = false;
-		player.x -= 2;
+		object.startJump = object.y-player.height*3;
+		object.falling = false;
+		object.onGround = true;
 	} 
-}
-
-function collisionWallEnemy(object) {
-	//Collision outher wall detection
-	if(object.x < 0) object.x = 0;
-	if(object.x >= width - object.width) object.x = width - object.width;
-	if(object.y < 0) object.y = 0;
-	if(object.y >= height-object.height) {
-		enemy.x = Math.random() * (width - 20);
-		enemy.y = Math.random() * (height - 530);
-	}
-}
-
-//Collision ground apple
-function collisionWallAppel(object) {
-	if(object.x < 0) object.x = 0;
-	if(object.x >= width - object.width) object.x = width - object.width;
-	if(object.y < 0) object.y = 0;
-	if(object.y >= height-object.height) object.y = height - object.height;
-}
-
-function resetBlock(object) {
-	if(object.x < 0) {
-		object.x = width;
-		object.height = Math.random() * (90-30);
-		object.y = object.height+510;
-
-	}
 }
 
 //detect collision with enemy
-function collisionEnemy() {
-	if(collision(player, enemy)) 
+function collisionEventRender(first, secound) {
+	if(collision(first, secound)) 
 	{
-		processEnemy();
-	}
-	if(collision(player, apple)) 
-	{
-		processApple();
-	} 
-}
 
-function collisionBlock(first, secound) {
-	if( collision( first, secound ) ) {
-		if( first.x > secound.x - secound.width && first.x - first.width < secound.x - secound.width ) {
-			processEnemy();	
-		}
+		block.x = 240;
+		block.y = 570;
+		
+		block2.x = 440;
+		block2.y = 470;
+
+		block3.x = 650;
+		block3.y = 450;
+
+		//render blocks on btn press 
+		context.fillStyle = "purple";
+		context.fillRect(block.x, block.y, block.width, block.height);
+
+		context.fillStyle = "yellow";
+		context.fillRect(block2.x, block2.y, block2.width, block2.height);
+		context.fillStyle = "green";
+		context.fillRect(block3.x, block3.y, block3.width, block3.height);	
+	}else {
 		
 	}
 }
@@ -281,10 +336,8 @@ function enemyControl(speedGainObject) {
 	enemy.y+=speedGainObject;
 }
 
-function blockControl(speedGainObject) {
-	block.x-=speedGainObject;
-	block2.x-=speedGainObject;
-	block3.x-=speedGainObject;
+function blockControl() {
+	
 }
 
 //controlsmovement of apple
@@ -359,17 +412,63 @@ function collision(first, secound) {
 		first.y + first.height < secound.y);
 }
 
-function collisionTerreain(first, secound) {
-	if(collision( first, secound )){
-		if( first.x > secound.x - secound.width && first.x - first.width < secound.x - secound.width) {
-			first.x = secound.x - secound.width;
-			console.log('right')
+function collisionBlock(first, secound) {
+
+	if(collision(first, secound)){
+		if( first.x <= secound.x + secound.width && first.x + first.width > secound.x + secound.width) {
+			first.x = secound.x + secound.width;
+			console.log('left');
 		}
-		else if ( first.x > secound.x - secound.width && first.x > secound.x - secound.width) {
+		if( first.x + first.width > secound.x && first.x < secound.x) {
+			first.x = secound.x - first.width
+			console.log('right');
+		}
+
+		if ( first.y + first.height >= secound.y && first.y < secound.y && first.x < secound.x + secound.width && first.x + first.width > secound.x) {
+			first.y = secound.y - first.height;
+			first.startJump = first.y-first.height*3;
+			first.falling = false;
+			first.onGround = true;	
+			console.log('over');	
+		}
+	 	
+	 	if ( first.y <= secound.y + secound.height && first.y + first.height > secound.y + secound.height && first.x < secound.x + secound.width && first.x + first.width > secound.x) {
+	 		first.falling = true;
+			first.onGround = false;
+			console.log('under');
+		}
+		
+
+		
+	}
+	
+
+	/*
+	if( collision( first, secound ) ) {
+		if( first.y < secound.y && first.x > secound.x-width) {
+			first.y = secound.y - first.height;
+			first.startJump = first.y-first.height*3;
+			first.falling = false;
+			first.onGround = true;		
+			console.log('top');
+		}
+
+		else if( first.y > secound.y-first.width && first.x + first.width > secound.x) {
+			first.falling = true;
+			first.onGround = false;
+			console.log('hit under');
+		}
+
+		else if (first.x + first.width >= secound.x && first.x < secound.x){
+			first.x = secound.x-first.width;
+			console.log('hitleft');
+		}
+		else if (first.x >= secound.x && first.x > secound.x) {
 			first.x = secound.x+secound.width;
-			console.log('left')
+			console.log('hit right');
 		}
 	}
+	*/
 }
 
 if( gameOn === true ){
